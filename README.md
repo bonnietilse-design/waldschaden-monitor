@@ -134,5 +134,4 @@ waldschaden-monitor/
 ## Links
 
 - StoryMap: [Vibe coding in ArcGIS: an NRW case study](LINK-TO-STORYMAP)
-- ArcGIS Online layer: [Waldschaden NRW 2023-2025](https://www.arcgis.com/home/item.html?id=45c16177709145c68d4b1a44fd7fcbf6)
 - Author: Bonnie Winter – [LinkedIn](https://www.linkedin.com/in/bonnie-tilse-winter-b66a4b303)
