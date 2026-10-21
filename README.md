@@ -26,6 +26,8 @@ new damage appeared between 2023 and 2025, and publishes the results to ArcGIS O
 | Healthy spruce left (assessed area) | 80,300 ha |
 | Early symptoms in 2023 → dead or cleared by 2025 | 14.9 % (healthy-looking forest: 2.9 %) – **5.1× the risk** |
 | Hotspot of new damage | high Sauerland (Hochsauerlandkreis, Olpe, Siegen-Wittgenstein) |
+| Loss by elevation | highest at 200–500 m (56–59 %); new damage rises with altitude, from ~5 % to 7 % at 700–800 m |
+| Loss by slope direction | south/south-east 48 % vs. north 44 % (NRW); 76 % vs. 61 % in the Märkischer Kreis |
 
 ## Pipeline
 
@@ -45,6 +47,7 @@ Each step writes a CSV report to `DATA_DIR\reports`.
 | 06 | `06_change.py` | Rasterises the releases (10 m), combines them, dates the damage, runs the early-warning test | `Schad_*`, `Schadensjahr_*`, `06_change_*.csv` | 3–10 min |
 | 07 | `07_species.py` | Species × damage class, healthy spruce left, spruce fields per municipality | `07_species_*.csv`, fields in `Stats_Gemeinden_*` | 4 min |
 | 08 | `08_hotspots.py` | 1 km² hexagons, damage per hexagon, Optimized Hot Spot Analysis (Getis-Ord Gi*) for damage share, new damage and early symptoms | `Hex_*`, `HS_*` | test district: 5 min |
+| 08b | `08b_terrain.py` | Mosaics and projects the Copernicus DEM, derives 100 m elevation bands and slope direction, and compares loss and new damage across them (shares, not hectares); writes two charts | `DEM_*`, `Hoehenstufe_*`, `Exposition_*`, `08b_*.csv`, `08b_*.png` | ~2 min (test) |
 | 09a | `09a_prepare_publish.py` | Builds a lean publish geodatabase and estimates the ArcGIS Online credit cost – uploads nothing | `Waldschaden_NRW_Publish.gdb` | seconds |
 | 09b | `09b_publish.py` | Publishes it as one hosted feature layer (ArcGIS API for Python, Pro sign-in) – private by default | hosted feature layer | < 1 min |
 
@@ -54,9 +57,11 @@ The damage polygons (5 million features) and the `Schadensjahr` raster were publ
 
 ## Setup
 
-1. **Requirements:** ArcGIS Pro 3.x with Spatial Analyst (steps 03b, 06–08) and the `arcgis` package
+1. **Requirements:** ArcGIS Pro 3.x with Spatial Analyst (steps 03b, 06–08b) and the `arcgis` package
    (included in `arcgispro-py3`, step 09b). Step 00b runs with plain Python.
 2. **Data:** download from OpenGeodata.NRW (see *Data* below), or use `00a_download_vitalitaet.py`.
+   For step 08b, download the Copernicus DEM GLO-30 for NRW (e.g. from OpenTopography as one GeoTIFF)
+   and set `DEM_DIR` at the top of `08b_terrain.py`.
 3. **Paths:** steps 00a–02 have their settings at the top of each script.
    From step 03 on, **all settings are in `config.py`**: paths, releases, damage definitions, species legend.
 4. **Test first:** `RUN_MODE = "test"` in `config.py` runs steps 04–08 on one district
@@ -70,6 +75,7 @@ The damage polygons (5 million features) and the `Schadensjahr` raster were publ
 | Vitalitätsabnahme Nadelwald, releases 2017-06 → 2023-09, → 2024-09, → 2025-08 | Landesbetrieb Wald und Holz NRW, [OpenGeodata.NRW](https://www.opengeodata.nrw.de/produkte/umwelt_klima/wald_forst/fernerkundung/) | dl-de/zero-2.0 |
 | Baumartenklassifikation NRW (10 m, Sentinel-2) | Landesbetrieb Wald und Holz NRW, OpenGeodata.NRW | dl-de/zero-2.0 |
 | Verwaltungsgrenzen NRW (DVG2) | Geobasis NRW, OpenGeodata.NRW | dl-de/zero-2.0 |
+| Copernicus DEM GLO-30 (step 08b) | © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA; distributed by [OpenTopography](https://doi.org/10.5069/G9028PQB) | Copernicus licence (attribution required) |
 | Digital orthophoto, 20 Sept 2025 (StoryMap) | Geobasis NRW, WMS `wms_nw_dop` | dl-de/zero-2.0 |
 | Satellite image, 14 Oct 2018 / 2019 (StoryMap) | Maxar via Esri World Imagery Wayback | Esri terms of use |
 
@@ -96,6 +102,9 @@ The damage polygons (5 million features) and the `Schadensjahr` raster were publ
 - Percentages for municipalities with less than 100 ha of conifer forest are not meaningful and are
   flagged (`wenig_nadelwald = 1`).
 - Hotspots of *new damage* use hectares per hexagon, so they partly reflect where spruce is still left.
+- Elevation and tree species are linked (lowland conifers are mostly pine, upland mostly spruce), so part of
+  the elevation effect reflects the species mix. GLO-30 is a surface model including the canopy; for 100 m
+  bands this makes no practical difference.
 
 ## Errors found and fixed along the way
 
@@ -110,6 +119,7 @@ A selection from the vibe-coding log – each one was caught by checking results
 | `InList` returns NoData, not 0, for "not in list" | `Schadensjahr` raster completely empty; noticed via 0 rows in step 08 | plain comparisons (`r == 2 \| r == 3`) |
 | District keys stored with a different format than assumed | district layer full of nulls in the attribute table | key normalisation + a "matched" check that warns |
 | Species legend unknown (10 values, 9 named classes) | — | derived from the data: value 1 lies 100 % on cleared conifer areas |
+| The downloaded elevation model had no coordinate system | `Undefined coordinate system` during reprojection | the script sets WGS 84 (EPSG:4326) when a file carries none |
 
 ## Repository structure
 
@@ -124,4 +134,5 @@ waldschaden-monitor/
 ## Links
 
 - StoryMap: [Vibe coding in ArcGIS: an NRW case study](LINK-TO-STORYMAP)
+- ArcGIS Online layer: [Waldschaden NRW 2023-2025](https://www.arcgis.com/home/item.html?id=45c16177709145c68d4b1a44fd7fcbf6)
 - Author: Bonnie Winter – [LinkedIn](https://www.linkedin.com/in/bonnie-tilse-winter-b66a4b303)
