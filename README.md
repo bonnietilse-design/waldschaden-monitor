@@ -3,7 +3,7 @@
 **Conifer forest loss in North Rhine-Westphalia since 2017 – a Python/ArcPy pipeline, written with AI**
 
 This repository holds the code behind the StoryMap
-**[Vibe coding in ArcGIS: an NRW case study](LINK-TO-STORYMAP)**.
+**[Vibe coding in ArcGIS: an NRW case study](https://storymaps.arcgis.com/stories/23c5c538e8a7492e8c8543e90d72abc3)**.
 It quantifies the loss of conifer forest per municipality since 2017, analyses where
 new damage appeared between 2023 and 2025, and publishes the results to ArcGIS Online.
 
