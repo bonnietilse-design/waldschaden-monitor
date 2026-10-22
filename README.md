@@ -133,5 +133,5 @@ waldschaden-monitor/
 
 ## Links
 
-- StoryMap: [Vibe coding in ArcGIS: an NRW case study](LINK-TO-STORYMAP)
+- StoryMap: [Vibe coding in ArcGIS: an NRW case study](https://arcg.is/1meOam4)
 - Author: Bonnie Winter – [LinkedIn](https://www.linkedin.com/in/bonnie-tilse-winter-b66a4b303)
